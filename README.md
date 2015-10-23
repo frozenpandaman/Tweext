@@ -16,6 +16,8 @@ This will output ``your_filename.tw`` which can then be imported, read, and comp
 
 The [twee utility](https://github.com/tweecode/twee) can compile from the command line (an easier, more automatic alternative to using the Twine application/GUI), so I plan to integrate this in the future as well.
 
+An installation of [Python](http://python.org/) 2.6.x or 2.7.x is required.
+
 ## A note
 
 Any texts uploaded to this repository are provided by [Project Gutenberg](http://www.gutenberg.org/) and are in the public domain.
