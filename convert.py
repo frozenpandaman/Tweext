@@ -1,6 +1,7 @@
 import sys, re
 
 def convert(file):
+	''' Converts a plain text file into Twee format, to be used by Twine. '''
 	filename = file.replace(".txt", '')
 
 	infile = open(file,'r')
@@ -34,6 +35,7 @@ def convert(file):
 	outfile.close()
 
 def findTitle(contents):
+	''' Finds the title of a book (Gutenberg.org format) '''
 	result = re.search("\nTitle: (.*)\n", contents)
 	try:
 		result = result.group(1)
@@ -42,6 +44,7 @@ def findTitle(contents):
 		return "Unknown"
 
 def findAuthor(contents):
+	''' Finds the author of a book (Gutenberg.org format) '''
 	result = re.search("\nAuthor: (.*)\n", contents)
 	try:
 		result = result.group(1)
@@ -50,6 +53,7 @@ def findAuthor(contents):
 		return "Unknown"
 
 def filterHeader(contents,title):
+	''' Separates the Gutenberg.org-style header and footer from the text body. '''
 	line1 = "*** START OF THIS PROJECT GUTENBERG EBOOK " + title.upper().strip() + " ***"
 	index1 = contents.find(line1)
 	if index1 == -1:
@@ -71,12 +75,14 @@ def filterHeader(contents,title):
 		return contents[startpos:endpos] ###
 
 def heading(n):
+	''' Returns the passage heading name (number). '''
 	if n == 0:
 		return "Start"
 	else:
 		return n
 
 def formatLinks(paras, i, outfile):
+	''' Converts the last word of each paragraph into a link to the next paragraph. '''
 	words = paras[i].split(' ')
 	lastword = words[-1]
 	try:
@@ -106,10 +112,12 @@ def formatLinks(paras, i, outfile):
 			outfile.write(word + " ")
 
 def setTitle(title, outfile):
+	''' Sets the title of the book (in the sidebar, or wherever StoryTitle is displayed). '''
 	outfile.write(":: StoryTitle\n")
 	outfile.write(title + "\n\n")
 
 def setAuthor(author, outfile):
+	''' Sets the title of the book (in the sidebar, or wherever StoryAuthor is displayed). '''
 	outfile.write(":: StoryAuthor\n")
 	outfile.write(author + "\n\n")
 
