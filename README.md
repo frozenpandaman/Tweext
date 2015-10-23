@@ -13,3 +13,7 @@ Run the following from the command line:
     python convert.py your_filename.txt
 
 This will output ``your_filename.tw`` which can then be imported, read, and compiled by Twine into a .html story. Currently, the last word of every paragraph is converted into a link leading to the next paragraph. The [twee utility](https://github.com/tweecode/twee) can do this from the command line, so I plan to integrate this in the future.
+
+## A note
+
+Any texts uploaded to this repository are provided by [Project Gutenberg](http://www.gutenberg.org/) and are in the public domain.
