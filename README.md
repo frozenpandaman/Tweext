@@ -12,7 +12,9 @@ Run the following from the command line:
 
     python convert.py your_filename.txt
 
-This will output ``your_filename.tw`` which can then be imported, read, and compiled by Twine into a .html story. Currently, the last word of every paragraph is converted into a link leading to the next paragraph. The [twee utility](https://github.com/tweecode/twee) can do this from the command line, so I plan to integrate this in the future.
+This will output ``your_filename.tw`` which can then be imported, read, and compiled by Twine/Twee. Currently, the last word of every paragraph is converted into a link leading to the next paragraph. In the future, I hope to incorporate synctactic category identification (part-of-speech tagging) to create a better, smarter, more dynamic linking system.
+
+The [twee utility](https://github.com/tweecode/twee) can compile from the command line (an easier, more automatic alternative to using the Twine application/GUI), so I plan to integrate this in the future as well.
 
 ## A note
 
