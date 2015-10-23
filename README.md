@@ -10,7 +10,7 @@ I'll probably rename this project at some point (or at the very least, remove th
 
 Run the following from the command line:
 
-    python convert.py your_filename.txt
+    python tweext.py your_filename.txt
 
 This will output ``your_filename.tw`` which can then be imported, read, and compiled by Twine/Twee. Currently, the last word of every paragraph is converted into a link leading to the next paragraph. In the future, I hope to incorporate synctactic category identification (part-of-speech tagging) to create a better, smarter, more dynamic linking system.
 

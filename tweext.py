@@ -57,9 +57,13 @@ def filterHeader(contents,title):
 	line1 = "*** START OF THIS PROJECT GUTENBERG EBOOK " + title.upper().strip() + " ***"
 	index1 = contents.find(line1)
 	if index1 == -1:
-		startpos = 0
+		startpos = 0 # don't cut out any header
 	else:
-		startpos = index1 + len(line1)
+		startpos = index1 + len(line1) # + number of blank lines. or that's what we want at least
+
+	# want to break on:
+	# {CHAPTER/PART} {1/ONE/I}(.)
+
 
 	#line2 = "*** END OF THIS PROJECT GUTENBERG EBOOK " + title.upper().strip() + " ***"
 	line2 = "End of the Project Gutenberg EBook "
@@ -68,11 +72,9 @@ def filterHeader(contents,title):
 	if startpos == 0 and endpos == -1: # avoid returning contents[-1:-1] if no author/title found
 		return contents
 	elif endpos == -1:
-		return contents[startpos:]
-	elif startpos == 0:
-		return contents[:endpos]
+		return contents[startpos:] # don't cut out any footer
 	else:
-		return contents[startpos:endpos] ###
+		return contents[startpos:endpos] # normal, incl. case where startpos = 0 (index1 = -1)
 
 def heading(n):
 	''' Returns the passage heading name (number). '''
