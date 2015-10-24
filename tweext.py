@@ -54,6 +54,7 @@ def findAuthor(contents):
 
 def filterHeader(contents,title):
 	''' Separates the Gutenberg.org-style header and footer from the text body. '''
+	# find starting point of actual book text
 	line1 = "*** START OF THIS PROJECT GUTENBERG EBOOK " + title.upper().strip() + " ***"
 	index1 = contents.find(line1)
 	if index1 == -1:
@@ -61,9 +62,36 @@ def filterHeader(contents,title):
 	else:
 		startpos = index1 + len(line1) # + number of blank lines. or that's what we want at least
 
-	# want to break on:
-	# {CHAPTER/PART} {1/ONE/I}(.)
 
+	# find first occurrence of title ("start" of book)
+	# get this working(?):
+	# start1 = re.search(title, contents, re.IGNORECASE)
+	start1 = contents.lower().find(title.lower(), startpos)
+	if start1 == -1:
+		start1 = startpos # lol ur screwed
+
+	# now, try to do better: look for author? or "by [author]", or if not, just "by "?
+	# even better - "contents" or "table of contents"
+	# orrr... {CHAPTER/PART} {1/ONE/I}(.)
+	# we should actually check these first in reverse order, only dealing with the 'worse' cases (earlier on) if we have to.
+
+	start2 = contents.find("\n\n\n", start1)
+	if start2 == -1:
+		start2 = contents.find("\r\n\r\n\r\n", start1) # try windows line breaks too
+	# if still -1, just try for 2 or 1 line break...
+	if start2 == -1:
+		start2 = contents.find("\n\n", start1)
+	if start2 == -1:
+		start2 = contents.find("\r\n\r\n", start1)
+	if start2 == -1:
+		start2 = contents.find("\n", start1)
+	if start2 == -1:
+		start2 = contents.find("\r\n", start1)
+
+	if start2 != -1:
+		startpos = start2 # set startpos to our "real" starting point
+
+	# now for the ending point
 
 	#line2 = "*** END OF THIS PROJECT GUTENBERG EBOOK " + title.upper().strip() + " ***"
 	line2 = "End of the Project Gutenberg EBook "
