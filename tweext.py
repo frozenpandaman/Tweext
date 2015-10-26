@@ -12,7 +12,7 @@ def convert(file):
 	title = findTitle(contents)
 	author = findAuthor(contents)
 
-	contents = filterHeader(contents, title)
+	contents = filterHeader(contents, title, author)
 	contents = re.split("\n\n|\r\n\r\n", contents) # split up paragraphs. grr windows line breaks
 
 	paras = [] # put whole paragraph on one line
@@ -26,13 +26,17 @@ def convert(file):
 	setTitle(title, outfile)
 	setAuthor(author, outfile)
 
+ 	# don't parse line breaks, and don't let our paras count go up for these
+	paras[:] = (para for para in paras if para.strip() != "")
+
 	for i in range(len(paras)):
-	#if para[i] != "":
-		outfile.write(":: " + str(heading(i)) + "\n") # append Twee paragraph headings
-		formatLinks(paras, i, outfile) # make the last word of each paragraph a link
-		outfile.write("\n\n")
+		if paras[i].strip() != "":
+			outfile.write(":: " + str(heading(i)) + "\n") # append Twee paragraph headings
+			formatLinks(paras, i, outfile) # make the last word of each paragraph a link
+			outfile.write("\n\n")
 
 	outfile.close()
+
 
 def findTitle(contents):
 	''' Finds the title of a book (Gutenberg.org format) '''
@@ -52,9 +56,24 @@ def findAuthor(contents):
 	except:
 		return "Unknown"
 
-def filterHeader(contents,title):
+def filterHeader(contents, title, author):
 	''' Separates the Gutenberg.org-style header and footer from the text body. '''
-	# find starting point of actual book text
+
+	# find the ending point first (to not have to search legal jargon @ bottom)
+	endpossib = []
+	endpossib.append(contents.find("End of the Project Gutenberg EBook "))
+	endpossib.append(contents.find("*** END OF THIS PROJECT GUTENBERG EBOOK "))
+	endpossib.append(contents.find("End of Project Gutenberg's "))
+	for n in endpossib:
+		if n == -1:
+			endpossib.remove(-1)
+	if len(endpossib) != 0:
+		endpos = min(endpossib)
+	else:
+		endpos = -1
+
+
+	# now find the starting point of the actual book text
 	line1 = "*** START OF THIS PROJECT GUTENBERG EBOOK " + title.upper().strip() + " ***"
 	index1 = contents.find(line1)
 	if index1 == -1:
@@ -62,40 +81,8 @@ def filterHeader(contents,title):
 	else:
 		startpos = index1 + len(line1) # + number of blank lines. or that's what we want at least
 
+	startpos += refineHeader(contents, title, author, startpos, endpos)
 
-	# find first occurrence of title ("start" of book)
-	# get this working(?):
-	# start1 = re.search(title, contents, re.IGNORECASE)
-	start1 = contents.lower().find(title.lower(), startpos)
-	if start1 == -1:
-		start1 = startpos # lol ur screwed
-
-	# now, try to do better: look for author? or "by [author]", or if not, just "by "?
-	# even better - "contents" or "table of contents"
-	# orrr... {CHAPTER/PART} {1/ONE/I}(.)
-	# we should actually check these first in reverse order, only dealing with the 'worse' cases (earlier on) if we have to.
-
-	start2 = contents.find("\n\n\n", start1)
-	if start2 == -1:
-		start2 = contents.find("\r\n\r\n\r\n", start1) # try windows line breaks too
-	# if still -1, just try for 2 or 1 line break...
-	if start2 == -1:
-		start2 = contents.find("\n\n", start1)
-	if start2 == -1:
-		start2 = contents.find("\r\n\r\n", start1)
-	if start2 == -1:
-		start2 = contents.find("\n", start1)
-	if start2 == -1:
-		start2 = contents.find("\r\n", start1)
-
-	if start2 != -1:
-		startpos = start2 # set startpos to our "real" starting point
-
-	# now for the ending point
-
-	#line2 = "*** END OF THIS PROJECT GUTENBERG EBOOK " + title.upper().strip() + " ***"
-	line2 = "End of the Project Gutenberg EBook "
-	endpos = contents.find(line2)
 
 	if startpos == 0 and endpos == -1: # avoid returning contents[-1:-1] if no author/title found
 		return contents
@@ -103,6 +90,23 @@ def filterHeader(contents,title):
 		return contents[startpos:] # don't cut out any footer
 	else:
 		return contents[startpos:endpos] # normal, incl. case where startpos = 0 (index1 = -1)
+
+def refineHeader(contents, title, author, startpos, endpos):
+	search = [0]
+	stringz = [
+		"CHAPTER I","CHAPTER ONE","CHAPTER 1",
+		"PART ONE","PART I","PART 1",
+		"SECTION I","SECTION ONE","SECTION 1",
+		"TABLE OF CONTENTS", "CONTENTS",
+		"by " + author, title,
+		"\n\n\n","\r\n\r\n\r\n",
+		"\n\n","\r\n\r\n",
+		"\n","\r\n" ]
+	for i in range(len(stringz)):
+		res = re.search(stringz[i], contents[startpos:endpos], re.IGNORECASE)
+		if res != None:
+			search.append(res.start())
+	return max(search)
 
 def heading(n):
 	''' Returns the passage heading name (number). '''
@@ -125,19 +129,21 @@ def formatLinks(paras, i, outfile):
 	except:
 		lastchar = ""
 	lc = len(lastchar)
+
+	# if i == len(paras) or i == len(paras)-1:
+	# 	print words[-1]
+	# for getting verylastword
+
 	for word in words:
 	#if word != "":
 		# if it's the last word, make it a link to the next paragraph
 		# (using tiddlywiki syntax), accounting for the period
 		# stuff after the 'and' for dealing with last para
-		if word == lastword and i != len(paras)-1:
-			if word.strip() == "": # line break
-				outfile.write("[[...|" + str(i+1) + "]]")
-			else: # regular linking way
-				if lastchar.isalpha() or lastchar == "*": # SO hacky. there has to be a better fix...
-					outfile.write("[[" + word[:-lc] + lastchar + "|" + str(i+1) + "]]")
-				else:
-					outfile.write("[[" + word[:-lc] + "|" + str(i+1) + "]]" + lastchar)
+		if word.strip() == lastword.strip() and i != len(paras)-1 and word.strip() != "":
+			if lastchar.isalpha() or lastchar == "*": # SO hacky. there has to be a better fix...
+				outfile.write("[[" + word[:-lc] + lastchar + "|" + str(i+1) + "]]")
+			else:
+				outfile.write("[[" + word[:-lc] + "|" + str(i+1) + "]]" + lastchar)
 		else: # regular word, not at end - no link
 			outfile.write(word + " ")
 
